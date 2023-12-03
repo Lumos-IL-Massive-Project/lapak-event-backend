@@ -20,7 +20,9 @@ module.exports = (sequelize, DataTypes) => {
     profile_image: DataTypes.STRING,
     role: DataTypes.ENUM('user', 'admin', 'event organizer'),
     status: DataTypes.ENUM('active', 'inactive'),
-    otp: DataTypes.INTEGER
+    otp: DataTypes.INTEGER,
+    otp_expired_date: DataTypes.DATE,
+    password: DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'User',

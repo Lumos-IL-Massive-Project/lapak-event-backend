@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 20px auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .header {
+        text-align: center;
+      }
+
+      .content {
+        margin-top: 20px;
+      }
+
+      .otp-code {
+        font-size: 24px;
+        font-weight: bold;
+        color: #007bff;
+      }
+
+      .footer {
+        margin-top: 20px;
+        text-align: center;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Lapak Event</h1>
+      </div>
+      <div class="content">
+        <h3>Hi, {{username}}</h3>
+        <p>Terima kasih telah memilih <b>Lapak Event</b></p>
+        <p>Silakan gunakan kode OTP berikut untuk konfirmasi:</p>
+        <p class="otp-code">{{otpCode}}</p>
+        <p>Harap selesaikan verifikasi akun anda dalam 5 menit.</p>
+        <p>Salam hangat, Lapak Event</p>
+        <p>Email ini dibuat otomatis, mohon tidak membalas.</p>
+      </div>
+      <div class="footer">
+        <p>Terima kasih telah menggunakan layanan kami.</p>
+      </div>
+    </div>
+  </body>
+</html>
