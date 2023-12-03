@@ -59,9 +59,7 @@ router.post(
       .withMessage("Email harus berformat email"),
     body("otp")
       .notEmpty()
-      .withMessage("OTP harus diisi!")
-      .isNumeric()
-      .withMessage("OTP harus berformat angka"),
+      .withMessage("OTP harus diisi!"),
   ],
   verifyOTP
 );
