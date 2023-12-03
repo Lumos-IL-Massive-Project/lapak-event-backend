@@ -213,7 +213,7 @@ const verifyOTP = async (req, res) => {
         throw new Error("Email telah terdaftar!");
       }
 
-      if (user.otp !== Number(req.body.otp)) {
+      if (user.otp !== req.body.otp) {
         throw new Error("Kode otp salah!");
       }
 
