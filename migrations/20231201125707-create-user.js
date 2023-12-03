@@ -30,6 +30,12 @@ module.exports = {
       otp: {
         type: Sequelize.INTEGER
       },
+      otp_expired_date: {
+        type: Sequelize.DATE
+      },
+      password: {
+        type: Sequelize.STRING
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
