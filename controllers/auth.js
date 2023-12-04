@@ -49,6 +49,10 @@ const login = async (req, res) => {
       throw new Error("Pengguna tidak ditemukan");
     }
 
+    if (platform === "mobile" && user.role === "admin") {
+      throw new Error("Pengguna tidak ditemukan");
+    }
+
     const isAuthorized = await bcrypt.compare(password, user.password);
 
     if (!isAuthorized) {

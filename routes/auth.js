@@ -23,6 +23,18 @@ router.post(
       .isEmail()
       .withMessage("Email harus berformat email"),
     body("password").notEmpty().withMessage("Password harus diisi!"),
+    body("platform")
+      .notEmpty()
+      .withMessage("Platform harus diisi!")
+      .custom((value, { req }) => {
+        const allowedPlatforms = ["mobile", "web"];
+
+        if (!allowedPlatforms.includes(value)) {
+          throw new Error("Platform tidak valid");
+        }
+
+        return true;
+      }),
   ],
   login
 );
@@ -57,9 +69,7 @@ router.post(
       .withMessage("Email harus diisi!")
       .isEmail()
       .withMessage("Email harus berformat email"),
-    body("otp")
-      .notEmpty()
-      .withMessage("OTP harus diisi!"),
+    body("otp").notEmpty().withMessage("OTP harus diisi!"),
   ],
   verifyOTP
 );
