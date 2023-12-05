@@ -46,17 +46,26 @@ const login = async (req, res) => {
 
     const user = await models.User.findOne({ where: { email } });
     if (!user) {
-      throw new Error("Pengguna tidak ditemukan");
+      return res.status(401).send({
+        success: false,
+        message: "Pengguna tidak ditemukan",
+      });
     }
 
     if (req.body.platform === "mobile" && user.role === "admin") {
-      throw new Error("Pengguna tidak ditemukan");
+      return res.status(401).send({
+        success: false,
+        message: "Pengguna tidak ditemukan",
+      });
     }
 
     const isAuthorized = await bcrypt.compare(password, user.password);
 
     if (!isAuthorized) {
-      throw new Error("Password tidak sesuai");
+      return res.status(400).send({
+        success: false,
+        message: "Password tidak sesuai",
+      });
     }
 
     const token = jwt.sign(
@@ -83,7 +92,7 @@ const login = async (req, res) => {
       data: { ...user.dataValues, token },
     });
   } catch (e) {
-    return res.status(401).send({
+    return res.status(500).send({
       success: false,
       message: e.message,
     });
@@ -101,7 +110,10 @@ const register = async (req, res) => {
       req.body;
 
     if (password !== confirmation_password) {
-      throw new Error("Password tidak sama!");
+      return res.status(400).send({
+        success: false,
+        message: "Password tidak sama!",
+      });  
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -147,9 +159,12 @@ const register = async (req, res) => {
       });
     }
 
-    throw new Error("Tidak berhasil mendaftar");
-  } catch (error) {
     return res.status(400).send({
+      success: false,
+      message: "Tidak berhasil mendaftar",
+    });
+  } catch (error) {
+    return res.status(500).send({
       success: false,
       message: error.message,
     });
@@ -171,7 +186,10 @@ const refreshOTP = async (req, res) => {
 
     if (user) {
       if (user.status === "active") {
-        throw new Error("Tidak dapat mengirim kode OTP");
+        return res.status(400).send({
+          success: false,
+          message: "Tidak dapat mengirim kode OTP",
+        });
       }
 
       const epoch = Math.floor(new Date().getTime() / 1000);
@@ -201,7 +219,7 @@ const refreshOTP = async (req, res) => {
       message: "Email tidak terdaftar",
     });
   } catch (error) {
-    return res.status(400).send({
+    return res.status(500).send({
       success: false,
       message: error.message,
     });
@@ -221,11 +239,17 @@ const verifyOTP = async (req, res) => {
 
     if (user) {
       if (user.status === "active") {
-        throw new Error("Email telah terdaftar!");
+        return res.status(409).send({
+          success: false,
+          message: "Email telah terdaftar!",
+        });  
       }
 
       if (user.otp !== req.body.otp) {
-        throw new Error("Kode otp salah!");
+        return res.status(400).send({
+          success: false,
+          message: "Kode otp salah!",
+        });  
       }
 
       const now = new Date();
@@ -240,7 +264,10 @@ const verifyOTP = async (req, res) => {
         });
       }
 
-      throw new Error("Kode otp telah kadaluwarsa");
+      return res.status(400).send({
+        success: false,
+        message: "Kode otp telah kadaluwarsa",
+      });
     }
 
     return res.status(404).json({
@@ -248,7 +275,7 @@ const verifyOTP = async (req, res) => {
       message: "Email tidak terdaftar",
     });
   } catch (error) {
-    return res.status(400).send({
+    return res.status(500).send({
       success: false,
       message: error.message,
     });

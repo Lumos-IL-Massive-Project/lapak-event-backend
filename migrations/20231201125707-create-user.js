@@ -28,7 +28,7 @@ module.exports = {
         type: Sequelize.ENUM('active', 'inactive')
       },
       otp: {
-        type: Sequelize.INTEGER
+        type: Sequelize.STRING(6)
       },
       otp_expired_date: {
         type: Sequelize.DATE
