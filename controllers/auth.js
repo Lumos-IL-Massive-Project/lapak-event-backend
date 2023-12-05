@@ -49,7 +49,7 @@ const login = async (req, res) => {
       throw new Error("Pengguna tidak ditemukan");
     }
 
-    if (platform === "mobile" && user.role === "admin") {
+    if (req.body.platform === "mobile" && user.role === "admin") {
       throw new Error("Pengguna tidak ditemukan");
     }
 
@@ -170,6 +170,10 @@ const refreshOTP = async (req, res) => {
     });
 
     if (user) {
+      if (user.status === "active") {
+        throw new Error("Tidak dapat mengirim kode OTP");
+      }
+
       const epoch = Math.floor(new Date().getTime() / 1000);
       const otp = otplib.authenticator.generate("lapak-event-otp", epoch);
       const otpExpiredDate = new Date();
@@ -186,6 +190,9 @@ const refreshOTP = async (req, res) => {
       return res.status(200).json({
         success: true,
         message: "Berhasil mengirim kode OTP, silahkan cek email anda",
+        data: {
+          otp,
+        }
       });
     }
 
