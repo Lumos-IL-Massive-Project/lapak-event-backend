@@ -1,9 +1,9 @@
-const { validationResult } = require("express-validator");
-const models = require("../models");
+const { validationResult, check } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const otplib = require("otplib");
 const { sendOTP } = require("./email");
+const db = require("../config/db");
 
 const checkRegisteredEmail = async (req, res) => {
   try {
@@ -12,11 +12,11 @@ const checkRegisteredEmail = async (req, res) => {
       throw new Error(errors.array()[0].msg);
     }
 
-    const user = await models.User.findOne({
-      where: { email: req.body.email },
-    });
+    const [users] = await db
+      .promise()
+      .query("SELECT * FROM `users` WHERE email = ?", [req.body.email]);
 
-    if (user) {
+    if (users.length > 0) {
       return res.status(200).json({
         success: true,
         message: "Email terdaftar",
@@ -44,22 +44,31 @@ const login = async (req, res) => {
 
     const { email, password } = req.body;
 
-    const user = await models.User.findOne({ where: { email } });
-    if (!user) {
+    const [checkEmailResult] = await db
+      .promise()
+      .query("SELECT * FROM `users` WHERE email = ?", [email]);
+
+    if (!checkEmailResult.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Pengguna tidak ditemukan",
+      });
+    }
+
+    if (
+      req.body.platform === "mobile" &&
+      checkEmailResult[0].role === "admin"
+    ) {
       return res.status(401).send({
         success: false,
         message: "Pengguna tidak ditemukan",
       });
     }
 
-    if (req.body.platform === "mobile" && user.role === "admin") {
-      return res.status(401).send({
-        success: false,
-        message: "Pengguna tidak ditemukan",
-      });
-    }
-
-    const isAuthorized = await bcrypt.compare(password, user.password);
+    const isAuthorized = await bcrypt.compare(
+      password,
+      checkEmailResult[0].password
+    );
 
     if (!isAuthorized) {
       return res.status(400).send({
@@ -69,28 +78,40 @@ const login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { role: user.role, email: user.email },
+      { role: checkEmailResult[0].role, email: checkEmailResult[0].email },
+      process.env.TOKEN_SECRET,
+      {
+        expiresIn: "1d",
+      }
+    );
+
+    const refreshToken = jwt.sign(
+      { role: checkEmailResult[0].role, email: checkEmailResult[0].email },
       process.env.TOKEN_SECRET,
       {
         expiresIn: "2d",
       }
     );
 
-    await models.User.update(
-      { token },
-      {
-        where: {
-          email,
-        },
-      }
-    );
+    const [updateRow] = await db
+      .promise()
+      .query("UPDATE `users` SET `token`=?,`refresh_token`=? WHERE email = ?", [
+        token,
+        refreshToken,
+        email,
+      ]);
 
-    delete user["dataValues"]["password"];
-    return res.send({
-      success: true,
-      message: "Berhasil masuk",
-      data: { ...user.dataValues, token },
-    });
+    if (updateRow.affectedRows > 0) {
+      const [users] = await db
+        .promise()
+        .query("SELECT * FROM `users` WHERE email = ?", [email]);
+
+      return res.send({
+        success: true,
+        message: "Berhasil masuk",
+        data: users[0],
+      });
+    }
   } catch (e) {
     return res.status(500).send({
       success: false,
@@ -113,7 +134,7 @@ const register = async (req, res) => {
       return res.status(400).send({
         success: false,
         message: "Password tidak sama!",
-      });  
+      });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -124,20 +145,36 @@ const register = async (req, res) => {
     const otpExpiredDate = new Date();
     otpExpiredDate.setMinutes(otpExpiredDate.getMinutes() + 5);
 
-    const [exist, user] = await models.User.findOrCreate({
-      where: { email },
-      defaults: {
-        name: username,
-        password: encryptedPassword,
-        phone_number,
-        role: "user",
-        status: "inactive",
-        otp,
-        otp_expired_date: otpExpiredDate,
-      },
-    });
+    const [checkEmailResult] = await db
+      .promise()
+      .query("SELECT * FROM `users` WHERE email = ?", [req.body.email]);
 
-    if (user) {
+    if (checkEmailResult.length > 0) {
+      return res.status(409).send({
+        success: false,
+        message: "Email telah digunakan",
+      });
+    }
+
+    const query = `
+    INSERT INTO users (name, email, password, phone_number, role, status, otp, otp_expired_date)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+    const [insertRow] = await db
+      .promise()
+      .query(query, [
+        username,
+        email,
+        encryptedPassword,
+        phone_number,
+        "user",
+        "inactive",
+        otp,
+        otpExpiredDate,
+      ]);
+
+    if (insertRow.affectedRows > 0) {
       sendOTP({ otpCode: otp, username, emailDestination: email });
 
       return res.status(200).send({
@@ -149,13 +186,6 @@ const register = async (req, res) => {
           password,
           otp,
         },
-      });
-    }
-
-    if (exist) {
-      return res.status(409).send({
-        success: false,
-        message: "Email telah digunakan",
       });
     }
 
@@ -180,28 +210,40 @@ const refreshOTP = async (req, res) => {
 
     const { email } = req.body;
 
-    const user = await models.User.findOne({
-      where: { email },
-    });
+    const [checkEmailResult] = await db
+      .promise()
+      .query("SELECT * FROM `users` WHERE email = ?", [req.body.email]);
 
-    if (user) {
-      if (user.status === "active") {
-        return res.status(400).send({
-          success: false,
-          message: "Tidak dapat mengirim kode OTP",
-        });
-      }
+    if (!checkEmailResult.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Email tidak terdaftar",
+      });
+    }
 
-      const epoch = Math.floor(new Date().getTime() / 1000);
-      const otp = otplib.authenticator.generate("lapak-event-otp", epoch);
-      const otpExpiredDate = new Date();
-      otpExpiredDate.setMinutes(otpExpiredDate.getMinutes() + 5);
+    if (checkEmailResult[0].status === "active") {
+      return res.status(409).send({
+        success: false,
+        message: "Tidak dapat mengirim kode OTP",
+      });
+    }
 
-      await user.update({ otp, otp_expired_date: otpExpiredDate });
+    const epoch = Math.floor(new Date().getTime() / 1000);
+    const otp = otplib.authenticator.generate("lapak-event-otp", epoch);
+    const otpExpiredDate = new Date();
+    otpExpiredDate.setMinutes(otpExpiredDate.getMinutes() + 5);
 
+    const [updateRow] = await db
+      .promise()
+      .query(
+        "UPDATE `users` SET `otp`=?,`otp_expired_date`=? WHERE email = ?",
+        [otp, otpExpiredDate, req.body.email]
+      );
+
+    if (updateRow.affectedRows > 0) {
       sendOTP({
         otpCode: otp,
-        username: user.name,
+        username: checkEmailResult[0].name,
         emailDestination: email,
       });
 
@@ -210,14 +252,9 @@ const refreshOTP = async (req, res) => {
         message: "Berhasil mengirim kode OTP, silahkan cek email anda",
         data: {
           otp,
-        }
+        },
       });
     }
-
-    return res.status(404).json({
-      success: false,
-      message: "Email tidak terdaftar",
-    });
   } catch (error) {
     return res.status(500).send({
       success: false,
@@ -233,47 +270,115 @@ const verifyOTP = async (req, res) => {
       throw new Error(errors.array()[0].msg);
     }
 
-    const user = await models.User.findOne({
-      where: { email: req.body.email },
-    });
+    const [checkEmailResult] = await db
+      .promise()
+      .query("SELECT * FROM `users` WHERE email = ?", [req.body.email]);
 
-    if (user) {
-      if (user.status === "active") {
-        return res.status(409).send({
-          success: false,
-          message: "Email telah terdaftar!",
-        });  
-      }
+    if (!checkEmailResult.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Email tidak terdaftar",
+      });
+    }
 
-      if (user.otp !== req.body.otp) {
-        return res.status(400).send({
-          success: false,
-          message: "Kode otp salah!",
-        });  
-      }
+    if (checkEmailResult[0].status === "active") {
+      return res.status(409).send({
+        success: false,
+        message: "Email telah terdaftar!",
+      });
+    }
 
-      const now = new Date();
+    if (checkEmailResult[0].otp !== req.body.otp) {
+      return res.status(409).send({
+        success: false,
+        message: "Kode otp salah!",
+      });
+    }
 
-      if (user.otp_expired_date >= now) {
-        await user.update({ status: "active" });
+    const now = new Date();
+    if (checkEmailResult[0].otp_expired_date >= now) {
+      const [updateRow] = await db
+        .promise()
+        .query("UPDATE `users` SET `status`='active' WHERE email = ?", [
+          req.body.email,
+        ]);
 
+      if (updateRow.affectedRows > 0) {
         return res.status(200).json({
           success: true,
           message:
             "Berhasil verifikasi email, silahkan login untuk dapat masuk ke aplikasi",
         });
       }
+    }
 
-      return res.status(400).send({
+    return res.status(400).send({
+      success: false,
+      message: "Kode otp telah kadaluwarsa",
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+const refreshToken = async (req, res) => {
+  try {
+    const [checkUser] = await db
+      .promise()
+      .query("SELECT * FROM `users` WHERE id =?", [req.params.id]);
+
+    if (!checkUser.length) {
+      return res.status(404).json({
         success: false,
-        message: "Kode otp telah kadaluwarsa",
+        message: "Data tidak ditemukan",
       });
     }
 
-    return res.status(404).json({
-      success: false,
-      message: "Email tidak terdaftar",
-    });
+    if (checkUser[0].refresh_token !== req.body.refresh_token) {
+      return res.status(400).json({
+        success: false,
+        message: "Refresh token salah!",
+      });
+    }
+
+    const token = jwt.sign(
+      { role: checkUser[0].role, email: checkUser[0].email },
+      process.env.TOKEN_SECRET,
+      {
+        expiresIn: "1d",
+      }
+    );
+
+    const refreshToken = jwt.sign(
+      { role: checkUser[0].role, email: checkUser[0].email },
+      process.env.TOKEN_SECRET,
+      {
+        expiresIn: "2d",
+      }
+    );
+
+    const [updateRow] = await db
+      .promise()
+      .query("UPDATE `users` SET `token`=?, `refresh_token`=? WHERE id =?", [
+        token,
+        refreshToken,
+        req.params.id,
+      ]);
+
+    if (updateRow.affectedRows > 0) {
+      const [users] = await db
+        .promise()
+        .query("SELECT * FROM `users` WHERE id = ?", [req.params.id]);
+
+      return res.send({
+        success: true,
+        message: "Berhasil refresh token",
+        data: users[0],
+      });
+    }
   } catch (error) {
     return res.status(500).send({
       success: false,
@@ -288,4 +393,5 @@ module.exports = {
   register,
   verifyOTP,
   refreshOTP,
+  refreshToken,
 };

@@ -5,6 +5,7 @@ const {
   register,
   verifyOTP,
   refreshOTP,
+  refreshToken,
 } = require("../controllers/auth");
 const { body } = require("express-validator");
 const router = express.Router();
@@ -83,6 +84,11 @@ router.post(
       .withMessage("Email harus berformat email"),
   ],
   refreshOTP
+);
+router.put(
+  "/refresh-token/:id",
+  [body("refresh_token").notEmpty().withMessage("Refresh token harus diisi")],
+  refreshToken
 );
 
 module.exports = router;
