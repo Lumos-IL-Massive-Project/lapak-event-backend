@@ -1,7 +1,7 @@
 const express = require("express");
 const { body } = require("express-validator");
 const router = express.Router();
-const { uploadBankImage } = require("../../controllers/multer");
+const { uploadBankImage } = require("../../middleware/multer");
 const {
   getBankDetails,
   createBank,
@@ -13,42 +13,36 @@ const { authAdmin } = require("../../middleware/auth");
 router.get("/:id", authAdmin, getBankDetails);
 router.post(
   "/",
+  uploadBankImage.single("image"),
   authAdmin,
   [
     body("name").notEmpty().withMessage("Nama harus diisi"),
     body("code").notEmpty().withMessage("Kode harus diisi"),
-    body("image")
-      .notEmpty()
-      .withMessage("Image harus diisi")
-      .custom((value, { req }) => {
-        if (!req.file) {
-          throw new Error("Image harus berupa file");
-        }
+    body("image").custom((value, { req }) => {
+      if (!req.file) {
+        throw new Error("Image harus berupa file");
+      }
 
-        return true;
-      }),
+      return true;
+    }),
   ],
-  uploadBankImage.single("image"),
   createBank
 );
 router.put(
   "/:id",
+  uploadBankImage.single("image"),
   authAdmin,
   [
     body("name").notEmpty().withMessage("Nama harus diisi"),
     body("code").notEmpty().withMessage("Kode harus diisi"),
-    body("image")
-      .notEmpty()
-      .withMessage("Image harus diisi")
-      .custom((value, { req }) => {
-        if (!req.file) {
-          throw new Error("Image harus berupa file");
-        }
+    body("image").custom((value, { req }) => {
+      if (!req.file) {
+        throw new Error("Image harus berupa file");
+      }
 
-        return true;
-      }),
+      return true;
+    }),
   ],
-  uploadBankImage.single("image"),
   updateBank
 );
 router.delete("/:id", authAdmin, deleteBank);

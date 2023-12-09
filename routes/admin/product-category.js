@@ -8,45 +8,39 @@ const {
   deleteProductCategory,
   updateProductCategory,
 } = require("../../controllers/product-category");
-const { uploadProductCategoryImage } = require("../../controllers/multer");
+const { uploadProductCategoryImage } = require("../../middleware/multer");
 
 router.get("/:id", authAdmin, getProductCategoryDetails);
 router.post(
   "/",
+  uploadProductCategoryImage.single("image"),
   authAdmin,
   [
     body("name").notEmpty().withMessage("Nama harus diisi"),
-    body("image")
-      .notEmpty()
-      .withMessage("Image harus diisi")
-      .custom((value, { req }) => {
-        if (!req.file) {
-          throw new Error("Image harus berupa file");
-        }
+    body("image").custom((value, { req }) => {
+      if (!req.file) {
+        throw new Error("Image harus berupa file");
+      }
 
-        return true;
-      }),
+      return true;
+    }),
   ],
-  uploadProductCategoryImage.single("image"),
   createProductCategory
 );
 router.put(
   "/:id",
+  uploadProductCategoryImage.single("image"),
   authAdmin,
   [
     body("name").notEmpty().withMessage("Nama harus diisi"),
-    body("image")
-      .notEmpty()
-      .withMessage("Image harus diisi")
-      .custom((value, { req }) => {
-        if (!req.file) {
-          throw new Error("Image harus berupa file");
-        }
+    body("image").custom((value, { req }) => {
+      if (!req.file) {
+        throw new Error("Image harus berupa file");
+      }
 
-        return true;
-      }),
+      return true;
+    }),
   ],
-  uploadProductCategoryImage.single("image"),
   updateProductCategory
 );
 router.delete("/:id", authAdmin, deleteProductCategory);

@@ -1,6 +1,7 @@
 const { validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 const db = require("../config/db");
+const throwError = require("../utils/throw-error");
 
 const config = process.env;
 
@@ -8,10 +9,7 @@ const auth = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        message: errors.array()[0].msg,
-      });
+      throwError(errors.array()[0].msg, 400);
     }
 
     const token = req.headers?.["authorization"]?.split(" ")?.[1];
@@ -19,10 +17,7 @@ const auth = async (req, res, next) => {
       if (err) {
         const message =
           err.name === "JsonWebTokenError" ? "Unauthorized" : "Token expired";
-        return res.status(401).json({
-          success: false,
-          message: message,
-        });
+        throwError(message, 401);
       }
 
       const [user] = await db
@@ -33,16 +28,13 @@ const auth = async (req, res, next) => {
         ]);
 
       if (!user.length) {
-        return res.status(401).json({
-          success: false,
-          message: "Unauthorized",
-        });
+        throwError("Unauthorized", 401);
       }
 
       return next();
     });
   } catch (error) {
-    return res.status(500).json({
+    return res.status(error.statusCode).json({
       success: false,
       message: message,
     });
@@ -53,10 +45,7 @@ const authAdmin = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        message: errors.array()[0].msg,
-      });
+      throwError(errors.array()[0].msg, 400);
     }
 
     const token = req.headers?.["authorization"]?.split(" ")?.[1];
@@ -64,11 +53,8 @@ const authAdmin = async (req, res, next) => {
       if (err) {
         const message =
           err.name === "JsonWebTokenError" ? "Unauthorized" : "Token expired";
-        return res.status(401).json({
-          success: false,
-          message: message,
-        });
-      }
+          throwError(message, 401);
+        }
 
       const [user] = await db
         .promise()
@@ -79,16 +65,13 @@ const authAdmin = async (req, res, next) => {
         ]);
 
       if (!user.length) {
-        return res.status(401).json({
-          success: false,
-          message: "Unauthorized",
-        });
+        throwError("Unauthorized", 401);
       }
 
       return next();
     });
   } catch (error) {
-    return res.status(500).json({
+    return res.status(error.statusCode).json({
       success: false,
       message: message,
     });

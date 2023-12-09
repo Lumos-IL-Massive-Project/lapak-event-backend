@@ -1,12 +1,14 @@
 const { validationResult } = require("express-validator");
 const fs = require("fs");
 const db = require("../config/db");
+const throwError = require("../utils/throw-error");
+const removeFile = require("../utils/remove-file");
 
 const getAllBanks = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      throw new Error(errors.array()[0].msg);
+      throwError(errors.array()[0].msg, 400);
     }
 
     const [banks] = await db.promise().query("SELECT * FROM `banks`");
@@ -17,7 +19,7 @@ const getAllBanks = async (req, res) => {
       data: banks,
     });
   } catch (error) {
-    return res.json({
+    return res.status(error.statusCode).json({
       success: false,
       message: error.message,
     });
@@ -28,7 +30,7 @@ const getBankDetails = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      throw new Error(errors.array()[0].msg);
+      throwError(errors.array()[0].msg, 400);
     }
 
     const [bankDetails] = await db
@@ -43,12 +45,9 @@ const getBankDetails = async (req, res) => {
       });
     }
 
-    return res.status(404).json({
-      success: false,
-      message: "Data tidak ditemukan",
-    });
+    throwError("Data tidak ditemukan", 404);
   } catch (error) {
-    return res.status(500).json({
+    return res.status(error.statusCode).json({
       success: false,
       message: error.message,
     });
@@ -57,6 +56,11 @@ const getBankDetails = async (req, res) => {
 
 const createBank = async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throwError(errors.array()[0].msg, 400);
+    }
+
     const [bank] = await db
       .promise()
       .query("INSERT INTO `banks` (`name`, `code`, `image_url`) VALUES (?, ?, ?)", [
@@ -72,12 +76,10 @@ const createBank = async (req, res) => {
       });
     }
 
-    return res.status(400).json({
-      success: false,
-      message: "Gagal menambahkan data",
-    });
+    throwError("Gagal menambahkan data", 400);
   } catch (error) {
-    return res.status(500).json({
+    removeFile(req.file.path);
+    return res.status(error.statusCode).json({
       success: false,
       message: error.message,
     });
@@ -86,24 +88,23 @@ const createBank = async (req, res) => {
 
 const updateBank = async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throwError(errors.array()[0].msg, 400);
+    }
+
     const [bank] = await db
       .promise()
       .query("SELECT * FROM `banks` WHERE id =?", [req.params.id]);
 
     if (!bank.length) {
-      return res.status(404).json({
-        success: false,
-        message: "Data tidak ditemukan",
-      });
+      throwError("Data tidak ditemukan", 404);
     }
 
     fs.unlink(bank[0].image_url, async (err) => {
       if (err) {
         console.error("Gagal menghapus gambar:", err);
-        return res.status(500).json({
-          success: false,
-          message: "Gagal mengupdate data",
-        });
+        throwError("Gagal mengupdate data", 500);
       }
 
       const [updateBank] = await db
@@ -121,7 +122,8 @@ const updateBank = async (req, res) => {
       }
     });
   } catch (error) {
-    return res.status(500).json({
+    removeFile(req.file.path);
+    return res.status(error.statusCode).json({
       success: false,
       message: error.message,
     });
@@ -135,19 +137,13 @@ const deleteBank = async (req, res) => {
       .query("SELECT * FROM `banks` WHERE id =?", [req.params.id]);
 
     if (!bank.length) {
-      return res.status(404).json({
-        success: false,
-        message: "Data tidak ditemukan",
-      });
+      throwError("Data tidak ditemukan", 404);
     }
 
     fs.unlink(bank[0].image_url, async (err) => {
       if (err) {
         console.error("Gagal menghapus gambar:", err);
-        return res.status(500).json({
-          success: false,
-          message: "Gagal menghapus data",
-        });
+        throwError("Gagal menghapus data", 500);
       }
 
       const [deleteBank] = await db
@@ -162,7 +158,7 @@ const deleteBank = async (req, res) => {
       }
     });
   } catch (error) {
-    return res.status(500).json({
+    return res.status(error.statusCode).json({
       success: false,
       message: error.message,
     });

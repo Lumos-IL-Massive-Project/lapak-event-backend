@@ -27,8 +27,12 @@ const uploadProductCategoryImage = multer({
 const uploadBankImage = multer({
   storage: createStorage("banks"),
 });
+const uploadUserProfileImage = multer({
+  storage: createStorage("profile-image"),
+});
 
 module.exports = {
   uploadProductCategoryImage,
   uploadBankImage,
+  uploadUserProfileImage,
 };

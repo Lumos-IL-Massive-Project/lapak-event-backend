@@ -2,14 +2,15 @@ const { validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const otplib = require("otplib");
-const { sendOTP } = require("./email");
+const { sendOTPEmail } = require("./email");
 const db = require("../config/db");
+const throwError = require("../utils/throw-error");
 
 const checkRegisteredEmail = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      throw new Error(errors.array()[0].msg);
+      throwError(errors.array()[0].msg, 400);
     }
 
     const [users] = await db
@@ -21,14 +22,11 @@ const checkRegisteredEmail = async (req, res) => {
         success: true,
         message: "Email terdaftar",
       });
-    } else {
-      return res.status(404).json({
-        success: false,
-        message: "Email tidak terdaftar",
-      });
     }
+
+    throwError("Email tidak terdaftar", 404);
   } catch (error) {
-    return res.json({
+    return res.status(error.statusCode).json({
       success: false,
       message: error.message,
     });
@@ -39,7 +37,7 @@ const login = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      throw new Error(errors.array()[0].msg);
+      throwError(errors.array()[0].msg, 400);
     }
 
     const { email, password } = req.body;
@@ -49,20 +47,14 @@ const login = async (req, res) => {
       .query("SELECT * FROM `users` WHERE email = ?", [email]);
 
     if (!checkEmailResult.length) {
-      return res.status(404).json({
-        success: false,
-        message: "Pengguna tidak ditemukan",
-      });
+      throwError("Pengguna tidak ditemukan", 404);
     }
 
     if (
       req.body.platform === "mobile" &&
       checkEmailResult[0].role === "admin"
     ) {
-      return res.status(401).send({
-        success: false,
-        message: "Pengguna tidak ditemukan",
-      });
+      throwError("Pengguna tidak ditemukan", 401);
     }
 
     const isAuthorized = await bcrypt.compare(
@@ -71,10 +63,7 @@ const login = async (req, res) => {
     );
 
     if (!isAuthorized) {
-      return res.status(400).send({
-        success: false,
-        message: "Password tidak sesuai",
-      });
+      throwError("Password tidak sesuai", 400);
     }
 
     const token = jwt.sign(
@@ -113,7 +102,7 @@ const login = async (req, res) => {
       });
     }
   } catch (e) {
-    return res.status(500).send({
+    return res.status(e.statusCode).send({
       success: false,
       message: e.message,
     });
@@ -124,17 +113,14 @@ const register = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      throw new Error(errors.array()[0].msg);
+      throwError(errors.array()[0].msg, 400);
     }
 
     const { email, username, phone_number, password, confirmation_password } =
       req.body;
 
     if (password !== confirmation_password) {
-      return res.status(400).send({
-        success: false,
-        message: "Password tidak sama!",
-      });
+      throwError("Password tidak sama!", 400);
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -150,10 +136,7 @@ const register = async (req, res) => {
       .query("SELECT * FROM `users` WHERE email = ?", [req.body.email]);
 
     if (checkEmailResult.length > 0) {
-      return res.status(409).send({
-        success: false,
-        message: "Email telah digunakan",
-      });
+      throwError("Email telah digunakan", 409);
     }
 
     const query = `
@@ -175,7 +158,7 @@ const register = async (req, res) => {
       ]);
 
     if (insertRow.affectedRows > 0) {
-      sendOTP({ otpCode: otp, username, emailDestination: email });
+      sendOTPEmail({ otpCode: otp, username, emailDestination: email });
 
       return res.status(200).send({
         success: true,
@@ -189,12 +172,9 @@ const register = async (req, res) => {
       });
     }
 
-    return res.status(400).send({
-      success: false,
-      message: "Tidak berhasil mendaftar",
-    });
+    throwError("Tidak berhasil mendaftar", 400);
   } catch (error) {
-    return res.status(500).send({
+    return res.status(error.statusCode).send({
       success: false,
       message: error.message,
     });
@@ -205,7 +185,7 @@ const refreshOTP = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      throw new Error(errors.array()[0].msg);
+      throwError(errors.array()[0].msg, 400);
     }
 
     const { email } = req.body;
@@ -215,17 +195,11 @@ const refreshOTP = async (req, res) => {
       .query("SELECT * FROM `users` WHERE email = ?", [req.body.email]);
 
     if (!checkEmailResult.length) {
-      return res.status(404).json({
-        success: false,
-        message: "Email tidak terdaftar",
-      });
+      throwError("Email tidak terdaftar", 404);
     }
 
     if (checkEmailResult[0].status === "active") {
-      return res.status(409).send({
-        success: false,
-        message: "Tidak dapat mengirim kode OTP",
-      });
+      throwError("Tidak dapat mengirim kode OTP", 409);
     }
 
     const epoch = Math.floor(new Date().getTime() / 1000);
@@ -241,7 +215,7 @@ const refreshOTP = async (req, res) => {
       );
 
     if (updateRow.affectedRows > 0) {
-      sendOTP({
+      sendOTPEmail({
         otpCode: otp,
         username: checkEmailResult[0].name,
         emailDestination: email,
@@ -256,7 +230,7 @@ const refreshOTP = async (req, res) => {
       });
     }
   } catch (error) {
-    return res.status(500).send({
+    return res.status(error.statusCode).send({
       success: false,
       message: error.message,
     });
@@ -267,7 +241,7 @@ const verifyOTP = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      throw new Error(errors.array()[0].msg);
+      throwError(errors.array()[0].msg, 400);
     }
 
     const [checkEmailResult] = await db
@@ -275,24 +249,15 @@ const verifyOTP = async (req, res) => {
       .query("SELECT * FROM `users` WHERE email = ?", [req.body.email]);
 
     if (!checkEmailResult.length) {
-      return res.status(404).json({
-        success: false,
-        message: "Email tidak terdaftar",
-      });
+      throwError("Email tidak terdaftar", 404);
     }
 
     if (checkEmailResult[0].status === "active") {
-      return res.status(409).send({
-        success: false,
-        message: "Email telah terdaftar!",
-      });
+      throwError("Email telah terdaftar!", 409);
     }
 
     if (checkEmailResult[0].otp !== req.body.otp) {
-      return res.status(409).send({
-        success: false,
-        message: "Kode otp salah!",
-      });
+      throwError("Kode otp salah!", 409);
     }
 
     const now = new Date();
@@ -312,12 +277,9 @@ const verifyOTP = async (req, res) => {
       }
     }
 
-    return res.status(400).send({
-      success: false,
-      message: "Kode otp telah kadaluwarsa",
-    });
+    throwError("Kode otp telah kadaluwarsa", 400);
   } catch (error) {
-    return res.status(500).send({
+    return res.status(error.statusCode).send({
       success: false,
       message: error.message,
     });
@@ -326,22 +288,21 @@ const verifyOTP = async (req, res) => {
 
 const refreshToken = async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throwError(errors.array()[0].msg, 400);
+    }
+
     const [checkUser] = await db
       .promise()
       .query("SELECT * FROM `users` WHERE id =?", [req.params.id]);
 
     if (!checkUser.length) {
-      return res.status(404).json({
-        success: false,
-        message: "Data tidak ditemukan",
-      });
+      throwError("Data tidak ditemukan", 404);
     }
 
     if (checkUser[0].refresh_token !== req.body.refresh_token) {
-      return res.status(400).json({
-        success: false,
-        message: "Refresh token salah!",
-      });
+      throwError("Refresh token salah!", 400);
     }
 
     const token = jwt.sign(
@@ -380,7 +341,7 @@ const refreshToken = async (req, res) => {
       });
     }
   } catch (error) {
-    return res.status(500).send({
+    return res.status(error.statusCode).send({
       success: false,
       message: error.message,
     });
