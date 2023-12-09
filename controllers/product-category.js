@@ -41,7 +41,7 @@ const getProductCategoryDetails = async (req, res) => {
       return res.json({
         success: true,
         message: "Berhasil mengambil data",
-        data: productCategoryDetails,
+        data: productCategoryDetails[0],
       });
     }
 
