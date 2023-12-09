@@ -7,6 +7,7 @@ const {
   getProductCategoryDetails,
   createProductCategory,
   deleteProductCategory,
+  updateProductCategory,
 } = require("../controllers/product-category");
 const { uploadProductCategoryImage } = require("../controllers/multer");
 
@@ -30,6 +31,25 @@ router.post(
   ],
   uploadProductCategoryImage.single("image"),
   createProductCategory
+);
+router.put(
+  "/:id",
+  auth,
+  [
+    body("name").notEmpty().withMessage("Nama harus diisi"),
+    body("image")
+      .notEmpty()
+      .withMessage("Image harus diisi")
+      .custom((value, { req }) => {
+        if (!req.file) {
+          throw new Error("Image harus berupa file");
+        }
+
+        return true;
+      }),
+  ],
+  uploadProductCategoryImage.single("image"),
+  updateProductCategory
 );
 router.delete("/:id", auth, deleteProductCategory);
 
