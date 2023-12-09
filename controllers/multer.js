@@ -24,7 +24,11 @@ const createStorage = (storageName) => {
 const uploadProductCategoryImage = multer({
   storage: createStorage("product-categories"),
 });
+const uploadBankImage = multer({
+  storage: createStorage("banks"),
+});
 
 module.exports = {
   uploadProductCategoryImage,
+  uploadBankImage,
 };

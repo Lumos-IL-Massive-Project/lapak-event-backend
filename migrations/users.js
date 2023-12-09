@@ -28,9 +28,6 @@ const up = () => {
     .catch((error) => {
       console.log('Table "users" failed to create');
       console.error(error);
-    })
-    .finally(() => {
-      db.end();
     });
 };
 
@@ -47,9 +44,6 @@ const down = () => {
     .catch((error) => {
       console.log('Table "users" failed to dropped');
       console.error(error);
-    })
-    .finally(() => {
-      db.end();
     });
 };
 

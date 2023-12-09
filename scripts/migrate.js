@@ -53,6 +53,10 @@ const executeMigrations = async (migrateCommand) => {
     } else {
       console.error(error);
     }
+  } finally {
+    setTimeout(() => {
+      process.exit(0);
+    }, 1000);
   }
 };
 
