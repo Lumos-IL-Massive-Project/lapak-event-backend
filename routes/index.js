@@ -9,6 +9,7 @@ const bank = require("./bank");
 // admin
 const bankAdmin = require('./admin/bank');
 const productCategoryAdmin = require("./admin/product-category");
+const userAdmin = require("./admin/user");
 
 // global route
 router.use("/auth", auth);
@@ -18,5 +19,6 @@ router.use("/bank", bank);
 // admin route
 router.use("/admin/bank", bankAdmin);
 router.use("/admin/product-category", productCategoryAdmin);
+router.use("/admin/user", userAdmin);
 
 module.exports = router;

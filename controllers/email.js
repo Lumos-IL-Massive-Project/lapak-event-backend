@@ -17,7 +17,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const sendOTP = ({ otpCode, username, emailDestination }) => {
+const sendOTPEmail = ({ otpCode, username, emailDestination }) => {
   try {
     const emailTemplatePath = path.join(emailTemplateFolder, "otp/index.html");
     const otpTemplate = fs.readFileSync(emailTemplatePath, "utf-8");
@@ -39,10 +39,37 @@ const sendOTP = ({ otpCode, username, emailDestination }) => {
       }
     });
   } catch (error) {
-    console.log("sendOTP", error);
+    console.log("sendOTPEmail", error);
+  }
+};
+
+const sendUserLoginCredentialEmail = ({ emailDestination, password }) => {
+  try {
+    const emailTemplatePath = path.join(emailTemplateFolder, "new-user/index.html");
+    const newUserTemplate = fs.readFileSync(emailTemplatePath, "utf-8");
+
+    const mailOptions = {
+      from: process.env.EMAIL_SENDER,
+      to: emailDestination,
+      subject: "Welcome to Lapak Event",
+      html: newUserTemplate
+        .replace("{{email}}", emailDestination)
+        .replace("{{password}}", password),
+    };
+
+    transporter.sendMail(mailOptions, function (error, info) {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log("Email sent: " + info.response);
+      }
+    });
+  } catch (error) {
+    console.log("sendUserLoginCredentialEmail", error);
   }
 };
 
 module.exports = {
-  sendOTP,
+  sendOTPEmail,
+  sendUserLoginCredentialEmail,
 };
