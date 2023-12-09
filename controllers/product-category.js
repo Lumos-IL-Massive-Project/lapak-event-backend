@@ -85,6 +85,50 @@ const createProductCategory = async (req, res) => {
   }
 };
 
+const updateProductCategory = async (req, res) => {
+  try {
+    const [productCategory] = await db
+      .promise()
+      .query("SELECT * FROM `product_categories` WHERE id =?", [req.params.id]);
+
+    if (!productCategory.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Data tidak ditemukan",
+      });
+    }
+
+    fs.unlink(productCategory[0].image_url, async (err) => {
+      if (err) {
+        console.error("Gagal menghapus gambar:", err);
+        return res.status(500).json({
+          success: false,
+          message: "Gagal mengupdate data",
+        });
+      }
+
+      const [updateProductCategory] = await db
+        .promise()
+        .query(
+          "UPDATE `product_categories` SET `name`=?,`image_url`=? WHERE id =?",
+          [req.body.name, req.file.path, req.params.id]
+        );
+
+      if (updateProductCategory.affectedRows > 0) {
+        res.json({
+          success: true,
+          message: "Data berhasil diupdate",
+        });
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 const deleteProductCategory = async (req, res) => {
   try {
     const [productCategory] = await db
@@ -130,5 +174,6 @@ module.exports = {
   getAllProductCategories,
   getProductCategoryDetails,
   createProductCategory,
+  updateProductCategory,
   deleteProductCategory,
 };

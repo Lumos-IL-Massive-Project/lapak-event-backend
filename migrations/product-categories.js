@@ -19,9 +19,6 @@ const up = () => {
     .catch((error) => {
       console.log('Table "product_categories" failed to create');
       console.error(error);
-    })
-    .finally(() => {
-      db.end();
     });
 };
 
@@ -38,9 +35,6 @@ const down = () => {
     .catch((error) => {
       console.log('Table "product_categories" failed to dropped');
       console.error(error);
-    })
-    .finally(() => {
-      db.end();
     });
 };
 
