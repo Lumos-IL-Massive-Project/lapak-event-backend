@@ -1,12 +1,14 @@
 const { validationResult } = require("express-validator");
 const fs = require("fs");
 const db = require("../config/db");
+const throwError = require("../utils/throw-error");
+const removeFile = require("../utils/remove-file");
 
 const getAllProductCategories = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      throw new Error(errors.array()[0].msg);
+      throwError(errors.array()[0].msg, 400);
     }
 
     const [productCategories] = await db
@@ -19,7 +21,7 @@ const getAllProductCategories = async (req, res) => {
       data: productCategories,
     });
   } catch (error) {
-    return res.json({
+    return res.status(error.statusCode).json({
       success: false,
       message: error.message,
     });
@@ -30,7 +32,7 @@ const getProductCategoryDetails = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      throw new Error(errors.array()[0].msg);
+      throwError(errors.array()[0].msg, 400);
     }
 
     const [productCategoryDetails] = await db
@@ -45,12 +47,9 @@ const getProductCategoryDetails = async (req, res) => {
       });
     }
 
-    return res.status(404).json({
-      success: false,
-      message: "Data tidak ditemukan",
-    });
+    throwError("Data tidak ditemukan", 404);
   } catch (error) {
-    return res.status(500).json({
+    return res.status(error.statusCode).json({
       success: false,
       message: error.message,
     });
@@ -59,6 +58,11 @@ const getProductCategoryDetails = async (req, res) => {
 
 const createProductCategory = async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throwError(errors.array()[0].msg, 400);
+    }
+
     const [productCategory] = await db
       .promise()
       .query(
@@ -73,12 +77,10 @@ const createProductCategory = async (req, res) => {
       });
     }
 
-    return res.status(400).json({
-      success: false,
-      message: "Gagal menambahkan data",
-    });
+    throwError("Gagal menambahkan data", 400);
   } catch (error) {
-    return res.status(500).json({
+    removeFile(req.file.path);
+    return res.status(error.statusCode).json({
       success: false,
       message: error.message,
     });
@@ -87,24 +89,23 @@ const createProductCategory = async (req, res) => {
 
 const updateProductCategory = async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throwError(errors.array()[0].msg, 400);
+    }
+
     const [productCategory] = await db
       .promise()
       .query("SELECT * FROM `product_categories` WHERE id =?", [req.params.id]);
 
     if (!productCategory.length) {
-      return res.status(404).json({
-        success: false,
-        message: "Data tidak ditemukan",
-      });
+      throwError("Data tidak ditemukan", 404);
     }
 
     fs.unlink(productCategory[0].image_url, async (err) => {
       if (err) {
         console.error("Gagal menghapus gambar:", err);
-        return res.status(500).json({
-          success: false,
-          message: "Gagal mengupdate data",
-        });
+        throwError("Gagal mengupdate data", 500);
       }
 
       const [updateProductCategory] = await db
@@ -122,7 +123,8 @@ const updateProductCategory = async (req, res) => {
       }
     });
   } catch (error) {
-    return res.status(500).json({
+    removeFile(req.file.path);
+    return res.status(error.statusCode).json({
       success: false,
       message: error.message,
     });
@@ -136,19 +138,13 @@ const deleteProductCategory = async (req, res) => {
       .query("SELECT * FROM `product_categories` WHERE id =?", [req.params.id]);
 
     if (!productCategory.length) {
-      return res.status(404).json({
-        success: false,
-        message: "Data tidak ditemukan",
-      });
+      throwError("Data tidak ditemukan", 404);
     }
 
     fs.unlink(productCategory[0].image_url, async (err) => {
       if (err) {
         console.error("Gagal menghapus gambar:", err);
-        return res.status(500).json({
-          success: false,
-          message: "Gagal menghapus data",
-        });
+        throwError("Gagal menghapus data", 500);
       }
 
       const [deleteProductCategory] = await db
@@ -163,7 +159,7 @@ const deleteProductCategory = async (req, res) => {
       }
     });
   } catch (error) {
-    return res.status(500).json({
+    return res.status(error.statusCode).json({
       success: false,
       message: error.message,
     });

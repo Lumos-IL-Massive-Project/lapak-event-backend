@@ -7,7 +7,7 @@ const up = () => {
       CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL UNIQUE,
         phone_number VARCHAR(255) NOT NULL,
         profile_image VARCHAR(255),
         role ENUM('user', 'admin', 'event organizer') DEFAULT 'user',
