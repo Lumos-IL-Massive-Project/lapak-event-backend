@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const routes = require("./routes/index");
+const path = require("path");
 require("dotenv").config();
 
 const app = express();
@@ -24,6 +25,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use("/api", routes);
 
 app.enable("trust proxy");
