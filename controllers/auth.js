@@ -1,4 +1,4 @@
-const { validationResult, check } = require("express-validator");
+const { validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const otplib = require("otplib");
