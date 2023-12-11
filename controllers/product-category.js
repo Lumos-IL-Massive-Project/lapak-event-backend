@@ -1,7 +1,7 @@
 const { validationResult } = require("express-validator");
 const fs = require("fs");
 const db = require("../config/db");
-const throwError = require("../utils/throw-error");
+const { throwError } = require("../utils/throw-error");
 const removeFile = require("../utils/remove-file");
 
 const getAllProductCategories = async (req, res) => {

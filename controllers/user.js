@@ -4,7 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const otplib = require("otplib");
 const { sendUserLoginCredentialEmail } = require("./email");
-const throwError = require("../utils/throw-error");
+const { throwError } = require("../utils/throw-error");
 const removeFile = require("../utils/remove-file");
 
 const getAllUsers = async (req, res) => {

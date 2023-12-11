@@ -1,7 +1,7 @@
 const { validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 const db = require("../config/db");
-const throwError = require("../utils/throw-error");
+const { throwError, returnError } = require("../utils/throw-error");
 
 const config = process.env;
 
@@ -17,7 +17,8 @@ const auth = async (req, res, next) => {
       if (err) {
         const message =
           err.name === "JsonWebTokenError" ? "Unauthorized" : "Token expired";
-        throwError(message, 401);
+        returnError(res, message, 401);
+        return;
       }
 
       const [user] = await db
@@ -28,7 +29,8 @@ const auth = async (req, res, next) => {
         ]);
 
       if (!user.length) {
-        throwError("Unauthorized", 401);
+        returnError(res, "Unauthorized", 401);
+        return; 
       }
 
       return next();
@@ -36,7 +38,7 @@ const auth = async (req, res, next) => {
   } catch (error) {
     return res.status(error.statusCode).json({
       success: false,
-      message: message,
+      message: error.message,
     });
   }
 };
@@ -53,8 +55,8 @@ const authAdmin = async (req, res, next) => {
       if (err) {
         const message =
           err.name === "JsonWebTokenError" ? "Unauthorized" : "Token expired";
-          throwError(message, 401);
-        }
+        throwError(message, 401);
+      }
 
       const [user] = await db
         .promise()
@@ -73,7 +75,7 @@ const authAdmin = async (req, res, next) => {
   } catch (error) {
     return res.status(error.statusCode).json({
       success: false,
-      message: message,
+      message: error.message,
     });
   }
 };
