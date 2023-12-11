@@ -10,7 +10,8 @@
     "start": "nodemon index.js",
     "migrate:up": "node ./scripts/migrate.js up",
     "migrate:down": "node ./scripts/migrate.js down",
-    "migrate:refresh": "node ./scripts/migrate.js refresh"
+    "migrate:refresh": "node ./scripts/migrate.js refresh",
+    "db:seed": "node ./scripts/seeder.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
