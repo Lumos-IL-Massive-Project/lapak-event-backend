@@ -4,4 +4,14 @@ const throwError = (message, statusCode) => {
   throw error;
 };
 
-module.exports = throwError;
+const returnError = (res, message, statusCode) => {
+  return res.status(statusCode).json({
+    success: false,
+    message,
+  });
+};
+
+module.exports = {
+  throwError,
+  returnError,
+};

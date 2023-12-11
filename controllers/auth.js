@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const otplib = require("otplib");
 const { sendOTPEmail } = require("./email");
 const db = require("../config/db");
-const throwError = require("../utils/throw-error");
+const { throwError } = require("../utils/throw-error");
 
 const checkRegisteredEmail = async (req, res) => {
   try {
@@ -93,7 +93,10 @@ const login = async (req, res) => {
     if (updateRow.affectedRows > 0) {
       const [users] = await db
         .promise()
-        .query("SELECT * FROM `users` WHERE email = ?", [email]);
+        .query(
+          "SELECT `id`, `name`, `email`, `phone_number`, `profile_image`, `role`, `status`, `token`, `refresh_token`, `created_at`, `updated_at` FROM `users` WHERE email = ?",
+          [email]
+        );
 
       return res.send({
         success: true,
