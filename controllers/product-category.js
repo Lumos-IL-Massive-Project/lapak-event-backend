@@ -79,7 +79,7 @@ const createProductCategory = async (req, res) => {
 
     throwError("Gagal menambahkan data", 400);
   } catch (error) {
-    removeFile(req.file.path);
+    removeFile(req.file?.path);
     return res.status(error.statusCode).json({
       success: false,
       message: error.message,
@@ -116,14 +116,16 @@ const updateProductCategory = async (req, res) => {
         );
 
       if (updateProductCategory.affectedRows > 0) {
-        res.json({
+        return res.json({
           success: true,
           message: "Data berhasil diupdate",
         });
       }
+
+      throwError("Gagal mengupdate data", 400);
     });
   } catch (error) {
-    removeFile(req.file.path);
+    removeFile(req.file?.path);
     return res.status(error.statusCode).json({
       success: false,
       message: error.message,
@@ -152,11 +154,13 @@ const deleteProductCategory = async (req, res) => {
         .query("DELETE FROM `product_categories` WHERE id =?", [req.params.id]);
 
       if (deleteProductCategory.affectedRows > 0) {
-        res.json({
+        return res.json({
           success: true,
           message: "Data berhasil dihapus",
         });
       }
+
+      throwError("Gagal menghapus data", 400);
     });
   } catch (error) {
     return res.status(error.statusCode).json({

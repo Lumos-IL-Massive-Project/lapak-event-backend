@@ -126,7 +126,7 @@ const createUser = async (req, res) => {
 
     throwError("Gagal menambahkan data", 400);
   } catch (error) {
-    removeFile(req.file.path);
+    removeFile(req.file?.path);
     return res.status(error.statusCode).json({
       success: false,
       message: error.message,
@@ -152,7 +152,7 @@ const updateUser = async (req, res) => {
     }
 
     if (checkUser[0].profile_image) {
-      removeFile(checkUser[0].profile_image);
+      removeFile(checkUser?.[0]?.profile_image);
     }
 
     const query =
@@ -177,7 +177,7 @@ const updateUser = async (req, res) => {
 
     throwError("Gagal mengupdate data", 400);
   } catch (error) {
-    removeFile(req.file.path);
+    removeFile(req?.file?.path);
     return res.status(error.statusCode).json({
       success: false,
       message: error.message,
@@ -196,7 +196,7 @@ const deleteUser = async (req, res) => {
     }
 
     if (users[0].profile_image) {
-      removeFile(users[0].profile_image);
+      removeFile(users?.[0]?.profile_image);
     }
 
     const [deleteUser] = await db
@@ -204,11 +204,13 @@ const deleteUser = async (req, res) => {
       .query("DELETE FROM `users` WHERE id =?", [req.params.id]);
 
     if (deleteUser.affectedRows > 0) {
-      res.json({
+      return res.json({
         success: true,
         message: "Data berhasil dihapus",
       });
     }
+
+    throwError("Gagal menghapus data", 400);
   } catch (error) {
     return res.status(error.statusCode).json({
       success: false,
