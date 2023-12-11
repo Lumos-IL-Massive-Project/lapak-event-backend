@@ -1,5 +1,4 @@
 const { validationResult } = require("express-validator");
-const fs = require("fs");
 const db = require("../config/db");
 const { throwError } = require("../utils/throw-error");
 
@@ -82,6 +81,7 @@ const createProvince = async (req, res) => {
 
 const updateProvince = async (req, res) => {
   try {
+    console.log(req.body);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       throwError(errors.array()[0].msg, 400);
@@ -95,26 +95,21 @@ const updateProvince = async (req, res) => {
       throwError("Data tidak ditemukan", 404);
     }
 
-    fs.unlink(province[0].image_url, async (err) => {
-      if (err) {
-        console.error("Gagal menghapus gambar:", err);
-        throwError("Gagal mengupdate data", 500);
-      }
+    const [updateProvince] = await db
+      .promise()
+      .query("UPDATE `provinces` SET `name`=? WHERE id =?", [
+        req.body.name,
+        req.params.id,
+      ]);
 
-      const [updateProvince] = await db
-        .promise()
-        .query("UPDATE `provinces` SET `name`=? WHERE id =?", [
-          req.body.name,
-          req.params.id,
-        ]);
+    if (updateProvince.affectedRows > 0) {
+      return res.json({
+        success: true,
+        message: "Data berhasil diupdate",
+      });
+    }
 
-      if (updateProvince.affectedRows > 0) {
-        res.json({
-          success: true,
-          message: "Data berhasil diupdate",
-        });
-      }
-    });
+    throwError("Gagal mengupdate data", 400);
   } catch (error) {
     return res.status(error.statusCode).json({
       success: false,
@@ -133,23 +128,18 @@ const deleteProvince = async (req, res) => {
       throwError("Data tidak ditemukan", 404);
     }
 
-    fs.unlink(province[0].image_url, async (err) => {
-      if (err) {
-        console.error("Gagal menghapus gambar:", err);
-        throwError("Gagal menghapus data", 500);
-      }
+    const [deleteProvince] = await db
+      .promise()
+      .query("DELETE FROM `provinces` WHERE id =?", [req.params.id]);
 
-      const [deleteProvince] = await db
-        .promise()
-        .query("DELETE FROM `provinces` WHERE id =?", [req.params.id]);
+    if (deleteProvince.affectedRows > 0) {
+      return res.json({
+        success: true,
+        message: "Data berhasil dihapus",
+      });
+    }
 
-      if (deleteProvince.affectedRows > 0) {
-        res.json({
-          success: true,
-          message: "Data berhasil dihapus",
-        });
-      }
-    });
+    throwError("Gagal menghapus data", 400);
   } catch (error) {
     return res.status(error.statusCode).json({
       success: false,

@@ -63,11 +63,10 @@ const createBank = async (req, res) => {
 
     const [bank] = await db
       .promise()
-      .query("INSERT INTO `banks` (`name`, `code`, `image_url`) VALUES (?, ?, ?)", [
-        req.body.name,
-        req.body.code,
-        req.file.path,
-      ]);
+      .query(
+        "INSERT INTO `banks` (`name`, `code`, `image_url`) VALUES (?, ?, ?)",
+        [req.body.name, req.body.code, req.file.path]
+      );
 
     if (bank.affectedRows > 0) {
       return res.json({
@@ -78,7 +77,7 @@ const createBank = async (req, res) => {
 
     throwError("Gagal menambahkan data", 400);
   } catch (error) {
-    removeFile(req.file.path);
+    removeFile(req.file?.path);
     return res.status(error.statusCode).json({
       success: false,
       message: error.message,
@@ -115,14 +114,16 @@ const updateBank = async (req, res) => {
         );
 
       if (updateBank.affectedRows > 0) {
-        res.json({
+        return res.json({
           success: true,
           message: "Data berhasil diupdate",
         });
       }
+
+      throwError("Gagal mengupdate data", 400);
     });
   } catch (error) {
-    removeFile(req.file.path);
+    removeFile(req.file?.path);
     return res.status(error.statusCode).json({
       success: false,
       message: error.message,
@@ -151,11 +152,13 @@ const deleteBank = async (req, res) => {
         .query("DELETE FROM `banks` WHERE id =?", [req.params.id]);
 
       if (deleteBank.affectedRows > 0) {
-        res.json({
+        return res.json({
           success: true,
           message: "Data berhasil dihapus",
         });
       }
+
+      throwError("Gagal menghapus data", 400);
     });
   } catch (error) {
     return res.status(error.statusCode).json({

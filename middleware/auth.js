@@ -9,7 +9,8 @@ const auth = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      throwError(errors.array()[0].msg, 400);
+      returnError(res, errors.array()[0].msg, 400);
+      return;
     }
 
     const token = req.headers?.["authorization"]?.split(" ")?.[1];
@@ -30,10 +31,10 @@ const auth = async (req, res, next) => {
 
       if (!user.length) {
         returnError(res, "Unauthorized", 401);
-        return; 
+        return;
       }
 
-      return next();
+      next();
     });
   } catch (error) {
     return res.status(error.statusCode).json({
@@ -47,7 +48,8 @@ const authAdmin = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      throwError(errors.array()[0].msg, 400);
+      returnError(res, errors.array()[0].msg, 400);
+      return;
     }
 
     const token = req.headers?.["authorization"]?.split(" ")?.[1];
@@ -55,7 +57,8 @@ const authAdmin = async (req, res, next) => {
       if (err) {
         const message =
           err.name === "JsonWebTokenError" ? "Unauthorized" : "Token expired";
-        throwError(message, 401);
+        returnError(res, message, 401);
+        return;
       }
 
       const [user] = await db
@@ -67,10 +70,11 @@ const authAdmin = async (req, res, next) => {
         ]);
 
       if (!user.length) {
-        throwError("Unauthorized", 401);
+        returnError(res, "Unauthorized", 401);
+        return;
       }
 
-      return next();
+      next();
     });
   } catch (error) {
     return res.status(error.statusCode).json({
