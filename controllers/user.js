@@ -26,7 +26,7 @@ const getAllUsers = async (req, res) => {
       data: users,
     });
   } catch (error) {
-    return res.status(error.statusCode).json({
+    return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
     });
@@ -57,7 +57,7 @@ const getUserDetails = async (req, res) => {
 
     throwError("Data tidak ditemukan", 404);
   } catch (error) {
-    return res.status(error.statusCode).json({
+    return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
     });
@@ -127,7 +127,7 @@ const createUser = async (req, res) => {
     throwError("Gagal menambahkan data", 400);
   } catch (error) {
     removeFile(req.file?.path);
-    return res.status(error.statusCode).json({
+    return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
     });
@@ -178,7 +178,7 @@ const updateUser = async (req, res) => {
     throwError("Gagal mengupdate data", 400);
   } catch (error) {
     removeFile(req?.file?.path);
-    return res.status(error.statusCode).json({
+    return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
     });
@@ -212,7 +212,7 @@ const deleteUser = async (req, res) => {
 
     throwError("Gagal menghapus data", 400);
   } catch (error) {
-    return res.status(error.statusCode).json({
+    return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
     });

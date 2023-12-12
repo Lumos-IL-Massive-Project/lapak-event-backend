@@ -19,7 +19,7 @@ const getAllBanks = async (req, res) => {
       data: banks,
     });
   } catch (error) {
-    return res.status(error.statusCode).json({
+    return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
     });
@@ -47,7 +47,7 @@ const getBankDetails = async (req, res) => {
 
     throwError("Data tidak ditemukan", 404);
   } catch (error) {
-    return res.status(error.statusCode).json({
+    return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
     });
@@ -78,7 +78,7 @@ const createBank = async (req, res) => {
     throwError("Gagal menambahkan data", 400);
   } catch (error) {
     removeFile(req.file?.path);
-    return res.status(error.statusCode).json({
+    return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
     });
@@ -124,7 +124,7 @@ const updateBank = async (req, res) => {
     });
   } catch (error) {
     removeFile(req.file?.path);
-    return res.status(error.statusCode).json({
+    return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
     });
@@ -161,7 +161,7 @@ const deleteBank = async (req, res) => {
       throwError("Gagal menghapus data", 400);
     });
   } catch (error) {
-    return res.status(error.statusCode).json({
+    return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
     });

@@ -1,7 +1,7 @@
 const { validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 const db = require("../config/db");
-const { throwError, returnError } = require("../utils/throw-error");
+const { returnError } = require("../utils/throw-error");
 
 const config = process.env;
 
@@ -37,7 +37,7 @@ const auth = async (req, res, next) => {
       next();
     });
   } catch (error) {
-    return res.status(error.statusCode).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -77,7 +77,7 @@ const authAdmin = async (req, res, next) => {
       next();
     });
   } catch (error) {
-    return res.status(error.statusCode).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
