@@ -21,7 +21,7 @@ const getAllProductCategories = async (req, res) => {
       data: productCategories,
     });
   } catch (error) {
-    return res.status(error.statusCode).json({
+    return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
     });
@@ -49,7 +49,7 @@ const getProductCategoryDetails = async (req, res) => {
 
     throwError("Data tidak ditemukan", 404);
   } catch (error) {
-    return res.status(error.statusCode).json({
+    return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
     });
@@ -80,7 +80,7 @@ const createProductCategory = async (req, res) => {
     throwError("Gagal menambahkan data", 400);
   } catch (error) {
     removeFile(req.file?.path);
-    return res.status(error.statusCode).json({
+    return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
     });
@@ -126,7 +126,7 @@ const updateProductCategory = async (req, res) => {
     });
   } catch (error) {
     removeFile(req.file?.path);
-    return res.status(error.statusCode).json({
+    return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
     });
@@ -163,7 +163,7 @@ const deleteProductCategory = async (req, res) => {
       throwError("Gagal menghapus data", 400);
     });
   } catch (error) {
-    return res.status(error.statusCode).json({
+    return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
     });

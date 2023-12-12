@@ -15,18 +15,54 @@ const checkRegisteredEmail = async (req, res) => {
 
     const [users] = await db
       .promise()
-      .query("SELECT * FROM `users` WHERE email = ?", [req.body.email]);
+      .query(
+        "SELECT `id`, `name`, `email`, `phone_number`, `profile_image`, `role`, `status`, `token`, `refresh_token`, `created_at`, `updated_at` FROM `users` WHERE email = ?",
+        [req.body.email]
+      );
 
     if (users.length > 0) {
-      return res.status(200).json({
-        success: true,
-        message: "Email terdaftar",
-      });
+      const token = jwt.sign(
+        { role: users[0].role, email: users[0].email },
+        process.env.TOKEN_SECRET,
+        {
+          expiresIn: "1d",
+        }
+      );
+
+      const refreshToken = jwt.sign(
+        { role: users[0].role, email: users[0].email },
+        process.env.TOKEN_SECRET,
+        {
+          expiresIn: "2d",
+        }
+      );
+
+      const [updateRow] = await db
+        .promise()
+        .query(
+          "UPDATE `users` SET `token`=?,`refresh_token`=? WHERE email = ?",
+          [token, refreshToken, req.body.email]
+        );
+
+      if (updateRow.affectedRows > 0) {
+        const [users] = await db
+          .promise()
+          .query(
+            "SELECT `id`, `name`, `email`, `phone_number`, `profile_image`, `role`, `status`, `token`, `refresh_token`, `created_at`, `updated_at` FROM `users` WHERE email = ?",
+            [req.body.email]
+          );
+
+        return res.status(200).json({
+          success: true,
+          message: "Email terdaftar",
+          data: users[0],
+        });
+      }
     }
 
     throwError("Email tidak terdaftar", 404);
   } catch (error) {
-    return res.status(error.statusCode).json({
+    return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
     });
@@ -104,8 +140,8 @@ const login = async (req, res) => {
         data: users[0],
       });
     }
-  } catch (e) {
-    return res.status(e.statusCode).send({
+  } catch (error) {
+    return res.status(error?.statusCode || 500).send({
       success: false,
       message: e.message,
     });
@@ -177,7 +213,7 @@ const register = async (req, res) => {
 
     throwError("Tidak berhasil mendaftar", 400);
   } catch (error) {
-    return res.status(error.statusCode).send({
+    return res.status(error?.statusCode || 500).send({
       success: false,
       message: error.message,
     });
@@ -233,7 +269,7 @@ const refreshOTP = async (req, res) => {
       });
     }
   } catch (error) {
-    return res.status(error.statusCode).send({
+    return res.status(error?.statusCode || 500).send({
       success: false,
       message: error.message,
     });
@@ -282,7 +318,7 @@ const verifyOTP = async (req, res) => {
 
     throwError("Kode otp telah kadaluwarsa", 400);
   } catch (error) {
-    return res.status(error.statusCode).send({
+    return res.status(error?.statusCode || 500).send({
       success: false,
       message: error.message,
     });
@@ -344,7 +380,7 @@ const refreshToken = async (req, res) => {
       });
     }
   } catch (error) {
-    return res.status(error.statusCode).send({
+    return res.status(error?.statusCode || 500).send({
       success: false,
       message: error.message,
     });

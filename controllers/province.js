@@ -17,7 +17,7 @@ const getAllProvinces = async (req, res) => {
       data: provinces,
     });
   } catch (error) {
-    return res.status(error.statusCode).json({
+    return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
     });
@@ -45,7 +45,7 @@ const getProvinceDetails = async (req, res) => {
 
     throwError("Data tidak ditemukan", 404);
   } catch (error) {
-    return res.status(error.statusCode).json({
+    return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
     });
@@ -72,7 +72,7 @@ const createProvince = async (req, res) => {
 
     throwError("Gagal menambahkan data", 400);
   } catch (error) {
-    return res.status(error.statusCode).json({
+    return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
     });
@@ -111,7 +111,7 @@ const updateProvince = async (req, res) => {
 
     throwError("Gagal mengupdate data", 400);
   } catch (error) {
-    return res.status(error.statusCode).json({
+    return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
     });
@@ -141,7 +141,7 @@ const deleteProvince = async (req, res) => {
 
     throwError("Gagal menghapus data", 400);
   } catch (error) {
-    return res.status(error.statusCode).json({
+    return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
     });
