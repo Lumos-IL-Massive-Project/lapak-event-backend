@@ -21,6 +21,10 @@ const checkRegisteredEmail = async (req, res) => {
       );
 
     if (users.length > 0) {
+      if (req.body.platform === "mobile" && users[0].role === "admin") {
+        throwError("Pengguna tidak ditemukan", 401);
+      }
+
       const token = jwt.sign(
         { role: users[0].role, email: users[0].email },
         process.env.TOKEN_SECRET,
@@ -86,6 +90,36 @@ const login = async (req, res) => {
       throwError("Pengguna tidak ditemukan", 404);
     }
 
+    if (checkEmailResult[0].status === "inactive") {
+      const epoch = Math.floor(new Date().getTime() / 1000);
+      const otp = otplib.authenticator.generate("lapak-event-otp", epoch);
+      const otpExpiredDate = new Date();
+      otpExpiredDate.setMinutes(otpExpiredDate.getMinutes() + 5);
+
+      const [updateRow] = await db
+        .promise()
+        .query(
+          "UPDATE `users` SET `otp`=?,`otp_expired_date`=? WHERE email = ?",
+          [otp, otpExpiredDate, email]
+        );
+
+      if (updateRow.affectedRows > 0) {
+        sendOTPEmail({
+          otpCode: otp,
+          username: checkEmailResult[0].name,
+          emailDestination: email,
+        });
+
+        return res.status(200).json({
+          success: true,
+          message: "Berhasil mengirim kode OTP, silahkan cek email anda",
+          data: {
+            otp,
+          },
+        });
+      }
+    }
+
     if (
       req.body.platform === "mobile" &&
       checkEmailResult[0].role === "admin"
@@ -143,7 +177,7 @@ const login = async (req, res) => {
   } catch (error) {
     return res.status(error?.statusCode || 500).send({
       success: false,
-      message: e.message,
+      message: error.message,
     });
   }
 };
