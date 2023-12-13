@@ -12,7 +12,21 @@ const router = express.Router();
 
 router.post(
   "/check-email",
-  [body("email").notEmpty().withMessage("Email harus diisi!")],
+  [
+    body("email").notEmpty().withMessage("Email harus diisi!"),
+    body("platform")
+      .notEmpty()
+      .withMessage("Platform harus diisi!")
+      .custom((value, { req }) => {
+        const allowedPlatforms = ["mobile", "web"];
+
+        if (!allowedPlatforms.includes(value)) {
+          throw new Error("Platform tidak valid");
+        }
+
+        return true;
+      }),
+  ],
   checkRegisteredEmail
 );
 router.post(

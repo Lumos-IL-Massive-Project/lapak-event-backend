@@ -102,28 +102,23 @@ const updateProductCategory = async (req, res) => {
       throwError("Data tidak ditemukan", 404);
     }
 
-    fs.unlink(productCategory[0].image_url, async (err) => {
-      if (err) {
-        console.error("Gagal menghapus gambar:", err);
-        throwError("Gagal mengupdate data", 500);
-      }
+    removeFile(productCategory?.[0]?.image_url);
 
-      const [updateProductCategory] = await db
-        .promise()
-        .query(
-          "UPDATE `product_categories` SET `name`=?,`image_url`=? WHERE id =?",
-          [req.body.name, req.file.path, req.params.id]
-        );
+    const [updateProductCategory] = await db
+      .promise()
+      .query(
+        "UPDATE `product_categories` SET `name`=?,`image_url`=? WHERE id =?",
+        [req.body.name, req.file.path, req.params.id]
+      );
 
-      if (updateProductCategory.affectedRows > 0) {
-        return res.json({
-          success: true,
-          message: "Data berhasil diupdate",
-        });
-      }
+    if (updateProductCategory.affectedRows > 0) {
+      return res.json({
+        success: true,
+        message: "Data berhasil diupdate",
+      });
+    }
 
-      throwError("Gagal mengupdate data", 400);
-    });
+    throwError("Gagal mengupdate data", 400);
   } catch (error) {
     removeFile(req.file?.path);
     return res.status(error?.statusCode || 500).json({
@@ -143,25 +138,20 @@ const deleteProductCategory = async (req, res) => {
       throwError("Data tidak ditemukan", 404);
     }
 
-    fs.unlink(productCategory[0].image_url, async (err) => {
-      if (err) {
-        console.error("Gagal menghapus gambar:", err);
-        throwError("Gagal menghapus data", 500);
-      }
+    removeFile(productCategory?.[0]?.image_url);
 
-      const [deleteProductCategory] = await db
-        .promise()
-        .query("DELETE FROM `product_categories` WHERE id =?", [req.params.id]);
+    const [deleteProductCategory] = await db
+      .promise()
+      .query("DELETE FROM `product_categories` WHERE id =?", [req.params.id]);
 
-      if (deleteProductCategory.affectedRows > 0) {
-        return res.json({
-          success: true,
-          message: "Data berhasil dihapus",
-        });
-      }
+    if (deleteProductCategory.affectedRows > 0) {
+      return res.json({
+        success: true,
+        message: "Data berhasil dihapus",
+      });
+    }
 
-      throwError("Gagal menghapus data", 400);
-    });
+    throwError("Gagal menghapus data", 400);
   } catch (error) {
     return res.status(error?.statusCode || 500).json({
       success: false,
