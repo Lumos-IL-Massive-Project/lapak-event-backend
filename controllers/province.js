@@ -81,7 +81,6 @@ const createProvince = async (req, res) => {
 
 const updateProvince = async (req, res) => {
   try {
-    console.log(req.body);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       throwError(errors.array()[0].msg, 400);

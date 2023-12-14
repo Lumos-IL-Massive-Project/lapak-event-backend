@@ -405,7 +405,10 @@ const refreshToken = async (req, res) => {
     if (updateRow.affectedRows > 0) {
       const [users] = await db
         .promise()
-        .query("SELECT * FROM `users` WHERE id = ?", [req.params.id]);
+        .query(
+          "SELECT `id`, `name`, `email`, `phone_number`, `profile_image`, `role`, `status`, `token`, `refresh_token`, `created_at`, `updated_at` FROM `users` FROM `users` WHERE id = ?",
+          [req.params.id]
+        );
 
       return res.send({
         success: true,
