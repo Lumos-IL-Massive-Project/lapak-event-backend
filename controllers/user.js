@@ -277,10 +277,42 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const getUserProfile = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throwError(errors.array()[0].msg, 400);
+    }
+
+    const [user] = await db
+      .promise()
+      .query(
+        "SELECT `id`, `name`, `email`, `phone_number`, `profile_image`, `role`, `status`, `otp`, `otp_expired_date`, `created_at`, `updated_at` FROM `users` WHERE id =?",
+        [req.body.user_id]
+      );
+
+    if (!user.length) {
+      throwError("User tidak ditemukan", 404);
+    }
+
+    res.json({
+      success: true,
+      message: "Berhasil mengambil data",
+      data: user[0],
+    });
+  } catch (error) {
+    return res.status(error?.statusCode || 500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserDetails,
   createUser,
   updateUser,
   deleteUser,
+  getUserProfile,
 };

@@ -406,7 +406,7 @@ const refreshToken = async (req, res) => {
       const [users] = await db
         .promise()
         .query(
-          "SELECT `id`, `name`, `email`, `phone_number`, `profile_image`, `role`, `status`, `token`, `refresh_token`, `created_at`, `updated_at` FROM `users` FROM `users` WHERE id = ?",
+          "SELECT `id`, `name`, `email`, `phone_number`, `profile_image`, `role`, `status`, `token`, `refresh_token`, `created_at`, `updated_at` FROM `users` WHERE id = ?",
           [req.params.id]
         );
 
