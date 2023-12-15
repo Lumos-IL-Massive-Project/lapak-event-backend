@@ -140,9 +140,9 @@ const seedData = [
 ];
 
 async function seed() {
-  try {
-    await db.promise().beginTransaction();
+  await db.promise().beginTransaction();
 
+  try {
     for (const data of seedData) {
       await db
         .promise()
@@ -152,6 +152,7 @@ async function seed() {
     await db.promise().commit();
     console.log("Seeder \"Province\" executed successfully!");
   } catch (error) {
+    await db.promise().rollback();
     console.error("Error in seeder:", error);
   }
 }

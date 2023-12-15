@@ -2,7 +2,7 @@ const multer = require("multer");
 const fs = require("fs");
 
 const createStorage = (storageName) => {
-  const destinationFolderPath = `images/${storageName}`;
+  const destinationFolderPath = `documents/${storageName}`;
 
   if (!fs.existsSync(destinationFolderPath)) {
     fs.mkdirSync(destinationFolderPath, { recursive: true });
@@ -28,11 +28,15 @@ const uploadBankImage = multer({
   storage: createStorage("banks"),
 });
 const uploadUserProfileImage = multer({
-  storage: createStorage("profile-image"),
+  storage: createStorage("profiles"),
+});
+const uploadEventOrganizerRegistrationDocument = multer({
+  storage: createStorage("eo-registrations"),
 });
 
 module.exports = {
   uploadProductCategoryImage,
   uploadBankImage,
   uploadUserProfileImage,
+  uploadEventOrganizerRegistrationDocument
 };
