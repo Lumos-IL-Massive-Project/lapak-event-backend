@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f4f4f4;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      color: #333333;
+    }
+    p {
+      color: #555555;
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #e74c3c;
+      color: #ffffff;
+      text-decoration: none;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Konfirmasi Penolakan Pendaftaran Event Organizer</h2>
+    <p>Mohon maaf, pengajuan pendaftaran Anda sebagai Event Organizer di Lapak Event tidak dapat diterima.</p>
+    <p>Alasan penolakan:</p>
+    <ul>
+      <% for (let i = 0; i < reasons.length; i++) { %>
+        <li><%= reasons[i] %></li>
+      <% } %>
+    </ul>
+    <p>Terima kasih atas pemahaman dan partisipasinya. Anda dapat mencoba mendaftar kembali setelah memperbaiki berkas.</p>
+    <a href="#" class="btn">Hubungi Kami</a>
+  </div>
+</body>
+</html>
