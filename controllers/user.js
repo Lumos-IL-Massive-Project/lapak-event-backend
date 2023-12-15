@@ -6,6 +6,10 @@ const otplib = require("otplib");
 const { sendUserLoginCredentialEmail } = require("./email");
 const { throwError } = require("../utils/throw-error");
 const removeFile = require("../utils/remove-file");
+const {
+  filterQueries,
+  prepareQueryParamValues,
+} = require("../utils/query-helper");
 
 const getAllUsers = async (req, res) => {
   try {
@@ -14,16 +18,70 @@ const getAllUsers = async (req, res) => {
       throwError(errors.array()[0].msg, 400);
     }
 
-    const [users] = await db
-      .promise()
-      .query(
-        "SELECT `id`, `name`, `email`, `phone_number`, `profile_image`, `role`, `status`, `otp`, `otp_expired_date`, `created_at`, `updated_at` FROM `users`"
-      );
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+    const offset = (page - 1) * pageSize;
 
+    let countQuery = "SELECT COUNT(*) AS total FROM `users`";
+    let dataQuery =
+      "SELECT `id`, `name`, `email`, `phone_number`, `profile_image`, `role`, `status`, `otp`, `otp_expired_date`, `created_at`, `updated_at` FROM `users`";
+
+    const filterColumn = ["name", "email", "phone_number"];
+    const arrQueries = Object.keys(req.query);
+    const filter = filterQueries({
+      arrQueries,
+      filterColumn,
+      table: "users",
+    });
+
+    countQuery += filter;
+    dataQuery += `
+        ${filter}
+        LIMIT ${pageSize}
+        OFFSET ${offset}
+      `;
+
+    const [countResult, dataResult] = await Promise.all([
+      new Promise((resolve, reject) => {
+        db.query(
+          countQuery,
+          prepareQueryParamValues(req.query, filterColumn),
+          (err, res) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve(res?.[0]?.total || 0);
+            }
+          }
+        );
+      }),
+      new Promise((resolve, reject) => {
+        db.query(
+          dataQuery,
+          prepareQueryParamValues(req.query, filterColumn),
+          (err, res) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve(res);
+            }
+          }
+        );
+      }),
+    ]);
+
+    const totalPage = Math.ceil(countResult / pageSize);
     return res.json({
       success: true,
       message: "Berhasil mengambil data",
-      data: users,
+      data: dataResult,
+      pagination: {
+        current_page: page,
+        prev_page: page > 1 ? page - 1 : null,
+        next_page: page < totalPage ? page + 1 : null,
+        total_data_per_page: dataResult?.length || 0,
+        total_data: countResult,
+      },
     });
   } catch (error) {
     return res.status(error?.statusCode || 500).json({
