@@ -45,6 +45,8 @@ const getAllCities = async (req, res) => {
       filterColumn,
       table: citiesTable,
     });
+
+    countQuery += filter;
     dataQuery += `
         ${filter}
         LIMIT ${pageSize}
