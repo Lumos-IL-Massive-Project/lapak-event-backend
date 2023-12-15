@@ -10,6 +10,7 @@ const auth = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      removeFile(req.file?.path);
       returnError(res, errors.array()[0].msg, 400);
       return;
     }
@@ -19,6 +20,8 @@ const auth = async (req, res, next) => {
       if (err) {
         const message =
           err.name === "JsonWebTokenError" ? "Unauthorized" : "Token expired";
+
+        removeFile(req.file?.path);
         returnError(res, message, 401);
         return;
       }
@@ -31,10 +34,12 @@ const auth = async (req, res, next) => {
         ]);
 
       if (!user.length) {
+        removeFile(req.file?.path);
         returnError(res, "Unauthorized", 401);
         return;
       }
 
+      req.body.user_id = user[0]?.id;
       next();
     });
   } catch (error) {
@@ -49,10 +54,7 @@ const authAdmin = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      if (req.file?.path) {
-        removeFile(req.file?.path);
-      }
-
+      removeFile(req.file?.path);
       returnError(res, errors.array()[0].msg, 400);
       return;
     }
@@ -63,27 +65,20 @@ const authAdmin = async (req, res, next) => {
         const message =
           err.name === "JsonWebTokenError" ? "Unauthorized" : "Token expired";
 
-        if (req.file?.path) {
-          removeFile(req.file?.path);
-        }
-
+        removeFile(req.file?.path);
         returnError(res, message, 401);
         return;
       }
 
       const [user] = await db
         .promise()
-        .query("SELECT `email`,`role`,`token` FROM `users` WHERE email =? AND role =? AND token=?", [
-          payload.email,
-          "admin",
-          token,
-        ]);
+        .query(
+          "SELECT `email`,`role`,`token` FROM `users` WHERE email =? AND role =? AND token=?",
+          [payload.email, "admin", token]
+        );
 
       if (!user.length) {
-        if (req.file?.path) {
-          removeFile(req.file?.path);
-        }
-
+        removeFile(req.file?.path);
         returnError(res, "Unauthorized", 401);
         return;
       }

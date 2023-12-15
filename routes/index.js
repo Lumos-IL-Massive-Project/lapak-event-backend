@@ -7,6 +7,7 @@ const productCategory = require("./product-category");
 const bank = require("./bank");
 const province = require("./province");
 const city = require("./city");
+const user = require("./user");
 
 // admin
 const bankAdmin = require("./admin/bank");
@@ -21,6 +22,7 @@ router.use("/product-category", productCategory);
 router.use("/bank", bank);
 router.use("/province", province);
 router.use("/city", city);
+router.use("/user", user);
 
 // admin route
 router.use("/admin/bank", bankAdmin);
