@@ -33,10 +33,14 @@ const uploadUserProfileImage = multer({
 const uploadEventOrganizerRegistrationDocument = multer({
   storage: createStorage("eo-registrations"),
 });
+const uploadProductImages = multer({
+  storage: createStorage("products"),
+});
 
 module.exports = {
   uploadProductCategoryImage,
   uploadBankImage,
   uploadUserProfileImage,
-  uploadEventOrganizerRegistrationDocument
+  uploadEventOrganizerRegistrationDocument,
+  uploadProductImages
 };

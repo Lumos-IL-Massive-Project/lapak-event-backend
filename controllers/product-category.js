@@ -124,8 +124,8 @@ const createProductCategory = async (req, res) => {
     const [productCategory] = await db
       .promise()
       .query(
-        "INSERT INTO `product_categories` (`name`, `image_url`) VALUES (?, ?)",
-        [req.body.name, req.file.path]
+        "INSERT INTO `product_categories` (`name`, `image_url`, `code`) VALUES (?, ?, ?)",
+        [req.body.name, req.file.path, req.body.code]
       );
 
     if (productCategory.affectedRows > 0) {
@@ -165,8 +165,8 @@ const updateProductCategory = async (req, res) => {
     const [updateProductCategory] = await db
       .promise()
       .query(
-        "UPDATE `product_categories` SET `name`=?,`image_url`=? WHERE id =?",
-        [req.body.name, req.file.path, req.params.id]
+        "UPDATE `product_categories` SET `name`=?,`image_url`=?,`code`=? WHERE id =?",
+        [req.body.name, req.file.path, req.body.code, req.params.id]
       );
 
     if (updateProductCategory.affectedRows > 0) {

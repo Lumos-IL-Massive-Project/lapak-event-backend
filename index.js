@@ -24,7 +24,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/documents', express.static(path.join(__dirname, 'images')));
+app.use('/documents', express.static(path.join(__dirname, 'documents')));
 app.use("/api", routes);
 
 app.enable("trust proxy");

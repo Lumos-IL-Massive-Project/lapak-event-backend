@@ -9,6 +9,7 @@ const province = require("./province");
 const city = require("./city");
 const user = require("./user");
 const eoRegistration = require("./eo-registration");
+const product = require("./products");
 
 // admin
 const bankAdmin = require("./admin/bank");
@@ -26,6 +27,7 @@ router.use("/province", province);
 router.use("/city", city);
 router.use("/user", user);
 router.use("/eo-registration", eoRegistration);
+router.use("/product", product);
 
 // admin route
 router.use("/admin/bank", bankAdmin);

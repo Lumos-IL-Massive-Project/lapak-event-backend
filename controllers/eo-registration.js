@@ -253,8 +253,8 @@ const uploadTemporaryDocument = async (req, res) => {
       const [documents] = await db
         .promise()
         .query(
-          "SELECT `id`,`document_url` FROM `eo_registration_documents` WHERE document_url = ?",
-          [req.file?.path]
+          "SELECT `id`,`document_url` FROM `eo_registration_documents` WHERE id = ?",
+          [results.insertId]
         );
 
       if (documents.length > 0) {
