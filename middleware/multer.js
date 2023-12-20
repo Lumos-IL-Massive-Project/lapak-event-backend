@@ -13,7 +13,8 @@ const createStorage = (storageName) => {
       cb(null, destinationFolderPath);
     },
     filename: function (req, file, cb) {
-      const extension = file.originalname.split(".")[1];
+      const filenameSplit = file.originalname.split(".");
+      const extension = filenameSplit[filenameSplit.length - 1];
       cb(null, `${Date.now()}-${storageName}.${extension}`);
     },
   });
