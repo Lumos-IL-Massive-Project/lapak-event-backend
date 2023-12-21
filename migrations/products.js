@@ -12,7 +12,7 @@ const up = () => {
         code VARCHAR(30) NOT NULL,
         rating VARCHAR(2) DEFAULT NULL,
         total_rating INT DEFAULT NULL,
-        price DECIMAL(10, 2) NOT NULL,
+        price DECIMAL(15, 2) NOT NULL,
         description TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
