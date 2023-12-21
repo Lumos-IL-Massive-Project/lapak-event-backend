@@ -1,4 +1,4 @@
-const { validationResult } = require("express-validator");
+const { validationResult, body } = require("express-validator");
 const jwt = require("jsonwebtoken");
 const db = require("../config/db");
 const { returnError } = require("../utils/throw-error");
@@ -93,4 +93,91 @@ const authAdmin = async (req, res, next) => {
   }
 };
 
-module.exports = { auth, authAdmin };
+const checkRegisteredEmailValidator = [
+  body("email").notEmpty().withMessage("Email harus diisi!"),
+  body("platform")
+    .notEmpty()
+    .withMessage("Platform harus diisi!")
+    .custom((value, { req }) => {
+      const allowedPlatforms = ["mobile", "web"];
+
+      if (!allowedPlatforms.includes(value)) {
+        throw new Error("Platform tidak valid");
+      }
+
+      return true;
+    }),
+];
+
+const loginValidator = [
+  body("email")
+    .notEmpty()
+    .withMessage("Email harus diisi!")
+    .isEmail()
+    .withMessage("Email harus berformat email"),
+  body("password").notEmpty().withMessage("Password harus diisi!"),
+  body("platform")
+    .notEmpty()
+    .withMessage("Platform harus diisi!")
+    .custom((value, { req }) => {
+      const allowedPlatforms = ["mobile", "web"];
+
+      if (!allowedPlatforms.includes(value)) {
+        throw new Error("Platform tidak valid");
+      }
+
+      return true;
+    }),
+];
+
+const registerValidator = [
+  body("username").notEmpty().withMessage("Username harus diisi!"),
+  body("email")
+    .notEmpty()
+    .withMessage("Email harus diisi!")
+    .isEmail()
+    .withMessage("Email harus berformat email"),
+  body("phone_number").notEmpty().withMessage("Nomor hp harus diisi!"),
+  body("password")
+    .notEmpty()
+    .withMessage("Password harus diisi!")
+    .isLength({ min: 8 })
+    .withMessage("Password minimal 8 karakter"),
+  body("confirmation_password")
+    .notEmpty()
+    .withMessage("Konfirmasi password harus diisi!")
+    .isLength({ min: 8 })
+    .withMessage("Konfirmasi password minimal 8 karakter"),
+];
+
+const verifyOtpValidator = [
+  body("email")
+    .notEmpty()
+    .withMessage("Email harus diisi!")
+    .isEmail()
+    .withMessage("Email harus berformat email"),
+  body("otp").notEmpty().withMessage("OTP harus diisi!"),
+];
+
+const refreshOtpValidator = [
+  body("email")
+    .notEmpty()
+    .withMessage("Email harus diisi!")
+    .isEmail()
+    .withMessage("Email harus berformat email"),
+];
+
+const refreshTokenValidator = [
+  body("refresh_token").notEmpty().withMessage("Refresh token harus diisi"),
+];
+
+module.exports = {
+  auth,
+  authAdmin,
+  checkRegisteredEmailValidator,
+  loginValidator,
+  registerValidator,
+  verifyOtpValidator,
+  refreshOtpValidator,
+  refreshTokenValidator
+};

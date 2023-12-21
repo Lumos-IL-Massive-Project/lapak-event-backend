@@ -1,5 +1,4 @@
 const { validationResult } = require("express-validator");
-const fs = require("fs");
 const db = require("../config/db");
 const removeFile = require("../utils/remove-file");
 const { throwError } = require("../utils/throw-error");
@@ -34,7 +33,7 @@ const getAllProducts = async (req, res) => {
       LEFT JOIN product_categories ON products.category_id = product_categories.id
     `;
 
-    const filterColumn = ["name", "code"];
+    const filterColumn = ["user_id", "category_id", "name", "code"];
     const arrQueries = Object.keys(req.query);
     const filter = filterQueries({
       arrQueries,
@@ -103,6 +102,7 @@ const getAllProducts = async (req, res) => {
           description: result.description,
           created_at: result.created_at,
           updated_at: result.updated_at,
+          thumbnail: result.image_url,
         };
       }
       return acc;

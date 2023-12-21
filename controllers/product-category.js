@@ -114,6 +114,52 @@ const getProductCategoryDetails = async (req, res) => {
   }
 };
 
+const uploadCategoryThumbnail = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throwError(errors.array()[0].msg, 400);
+    }
+
+    return res.json({
+      success: true,
+      message: "Berhasil mengunggah gambar",
+      data: {
+        thumbnail_url: req.file.path,
+      },
+    });
+  } catch (error) {
+    removeFile(req.file?.path);
+    return res.status(error?.statusCode || 500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+const uploadCategoryMenuImage = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throwError(errors.array()[0].msg, 400);
+    }
+
+    return res.json({
+      success: true,
+      message: "Berhasil mengunggah gambar",
+      data: {
+        menu_url: req.file.path,
+      },
+    });
+  } catch (error) {
+    removeFile(req.file?.path);
+    return res.status(error?.statusCode || 500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 const createProductCategory = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -124,8 +170,14 @@ const createProductCategory = async (req, res) => {
     const [productCategory] = await db
       .promise()
       .query(
-        "INSERT INTO `product_categories` (`name`, `image_url`, `code`) VALUES (?, ?, ?)",
-        [req.body.name, req.file.path, req.body.code]
+        "INSERT INTO `product_categories` (`name`, `thumbnail_url`, `code`, `is_menu`, `menu_url`) VALUES (?, ?, ?, ?, ?)",
+        [
+          req.body.name,
+          req.body.thumbnail_url,
+          req.body.code,
+          req.body.is_menu,
+          req.body.menu_url,
+        ]
       );
 
     if (productCategory.affectedRows > 0) {
@@ -137,7 +189,6 @@ const createProductCategory = async (req, res) => {
 
     throwError("Gagal menambahkan data", 400);
   } catch (error) {
-    removeFile(req.file?.path);
     return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
@@ -160,13 +211,20 @@ const updateProductCategory = async (req, res) => {
       throwError("Data tidak ditemukan", 404);
     }
 
-    removeFile(productCategory?.[0]?.image_url);
+    removeFile(productCategory?.[0]?.thumbnail_url);
 
     const [updateProductCategory] = await db
       .promise()
       .query(
-        "UPDATE `product_categories` SET `name`=?,`image_url`=?,`code`=? WHERE id =?",
-        [req.body.name, req.file.path, req.body.code, req.params.id]
+        "UPDATE `product_categories` SET `name`=?,`thumbnail_url`=?,`code`=?,`is_menu`=?,`menu_url`=? WHERE id =?",
+        [
+          req.body.name,
+          req.body.thumbnail_url,
+          req.body.code,
+          req.body.is_menu,
+          req.body.menu_url,
+          req.params.id,
+        ]
       );
 
     if (updateProductCategory.affectedRows > 0) {
@@ -178,7 +236,6 @@ const updateProductCategory = async (req, res) => {
 
     throwError("Gagal mengupdate data", 400);
   } catch (error) {
-    removeFile(req.file?.path);
     return res.status(error?.statusCode || 500).json({
       success: false,
       message: error.message,
@@ -196,7 +253,7 @@ const deleteProductCategory = async (req, res) => {
       throwError("Data tidak ditemukan", 404);
     }
 
-    removeFile(productCategory?.[0]?.image_url);
+    removeFile(productCategory?.[0]?.thumbnail_url);
 
     const [deleteProductCategory] = await db
       .promise()
@@ -224,4 +281,6 @@ module.exports = {
   createProductCategory,
   updateProductCategory,
   deleteProductCategory,
+  uploadCategoryThumbnail,
+  uploadCategoryMenuImage,
 };
